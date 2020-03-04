@@ -2,9 +2,11 @@ var express = require("express");
 var app = express();
 var bodyParser = require("body-parser");
 var methodOverride = require("method-override");
+var expressSanitizer = require("express-sanitizer");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(methodOverride("_method"));
+app.use(expressSanitizer());
 
 var mongoose = require("mongoose");
 mongoose.set('useNewUrlParser', true);
@@ -46,6 +48,7 @@ app.get("/blogs/new", function(req, res) {
 });
 
 app.post("/blogs", function(req, res) {
+    req.body.blog.body = req.sanitize(req.body.blog.body);
     Blog.create(req.body.blog, function(err, newBlog) {
         if (err) {
             res.render("new");
@@ -81,6 +84,16 @@ app.put("/blogs/:id", function(req, res) {
             res.redirect("/blogs");
         } else {
             res.redirect("/blogs/" + req.params.id);
+        }
+    });
+});
+
+app.delete("/blogs/:id", function(req, res) {
+    Blog.findByIdAndRemove(req.params.id, function(err) {
+        if (err) {
+            res.redirect("/blogs");
+        } else {
+            res.redirect("/blogs");
         }
     });
 });
